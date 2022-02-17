@@ -24,12 +24,16 @@ apex {
     manifest: "manifest.json",
     file_contexts: ":com.android.sepolicy-file_contexts",
     key: "com.android.sepolicy.key",
-    // TODO(jeffv): Making this platform signed for now for prototyping convencience,
-    // but eventually it needs to be signed with the key below.
-    certificate: "platform",
-
-    apps: ["SEPolicy-33"],
-    prebuilts: ["SEPolicy-33.apk.sig"],
+    prebuilts: [
+        "SEPolicy-33.zip.sig",
+        "SEPolicy-33.zip.fsv_sig",
+        "SEPolicy-33.zip",
+    ],
+    required: [
+        "SEPolicy.zip.sig",
+        "SEPolicy.zip.fsv_sig",
+        "SEPolicy.zip",
+    ],
 }
 
 apex_key {
@@ -48,29 +52,8 @@ filegroup {
     srcs: ["com.android.sepolicy.cert.pem"],
 }
 
-genrule_defaults {
-    name: "sepolicy_verity_sig_gen_default",
-    tools: ["fsverity"],
-    tool_files: [":SEPolicyKeyPem", ":SEPolicyCertPem"],
-    // Use fsverity tool to generate the signature file which
-    // will be stored in the apex.
-    // https://git.kernel.org/pub/scm/linux/kernel/git/ebiggers/fsverity-utils.git/tree/README.md
-    cmd: "$(location fsverity) sign $(in) $(out) " +
-        "--key=$(location :SEPolicyKeyPem) " +
-        "--cert=$(location :SEPolicyCertPem) " +
-        "> /dev/null",
-}
-
-genrule {
-    name: "SEPolicy-33.apk.fsv_sig",
-    defaults: ["sepolicy_verity_sig_gen_default"],
-    srcs: [":SEPolicy-33"],
-    out: ["SEPolicy-33.apk.fsv_sig"],
-}
-
 prebuilt_etc {
-    name: "SEPolicy-33.apk.sig",
-    src: ":SEPolicy-33.apk.fsv_sig",
-    installable: false,
-    filename: "SEPolicy-33.apk.fsv_sig",
+    name: "com.android.sepolicy.cert-debug.der",
+    src: "com.android.sepolicy.cert.der",
+    sub_dir: "selinux",
 }
